@@ -1,41 +1,39 @@
 #!/usr/bin/python3
-from fabric.api import put, run, env
-from os.path import exists
+"""Compress web static package."""
+from fabric.api import *
+from os import path
 
 env.hosts = ['3.85.168.165', '100.24.72.68']
-env.user = "ubuntu"
+env.user = 'ubuntu'
+env.key_filename = '~/.ssh/id_rsa'
 
 def do_deploy(archive_path):
-    """Distributes an archive to web servers."""
-    if not exists(archive_path):
-        return False
-
+    """Deploy web files to server."""
     try:
+        if not path.exists(archive_path):
+            return False
+
         file_name = archive_path.split("/")[-1]
         base_name = file_name.split(".")[0]
-        folder_name = f"/data/web_static/releases/{base_name}/"
+        dest_path = f"/data/web_static/releases/{base_name}/"
 
-        # Upload the archive to the /tmp/ directory
+        # Upload archive and create target directory
         put(archive_path, f"/tmp/{file_name}")
+        run(f"sudo mkdir -p {dest_path}")
 
-        # Uncompress the archive to the folder on the web server
-        run(f"mkdir -p {folder_name}")
-        run(f"tar -xzf /tmp/{file_name} -C {folder_name}")
+        # Uncompress archive and delete .tgz
+        run(f"sudo tar -xzf /tmp/{file_name} -C {dest_path}")
+        run(f"sudo rm /tmp/{file_name}")
 
-        # Delete the archive from the web server
-        run(f"rm /tmp/{file_name}")
+        # Move contents and remove extraneous directory
+        run(f"sudo mv {dest_path}web_static/* {dest_path}")
+        run(f"sudo rm -rf {dest_path}web_static")
 
-        # Move contents out of the 'web_static' subfolder
-        run(f"mv {folder_name}web_static/* {folder_name}")
-
-        # Delete the web_static subfolder
-        run(f"rm -rf {folder_name}web_static")
-
-        # Delete the symbolic link and create a new one
-        run("rm -rf /data/web_static/current")
-        run(f"ln -s {folder_name} /data/web_static/current")
-
-        print("New version deployed!")
-        return True
+        # Handle symbolic link
+        run("sudo rm -rf /data/web_static/current")
+        run(f"sudo ln -s {dest_path} /data/web_static/current")
     except Exception as e:
+        print(e)  # Optionally, log the exception
         return False
+
+    return True
