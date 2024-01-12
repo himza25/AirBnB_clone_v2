@@ -19,8 +19,7 @@ def do_deploy(archive_path):
         file_name = archive_path.split("/")[-1]
         name_no_ext = file_name.split(".")[0]
         remote_tmp_path = "/tmp/{}".format(file_name)
-        remote_release_folder = "/data/web_static/releases/{}/".format(
-            name_no_ext)
+        remote_release_folder = "/data/web_static/releases/{}/".format(name_no_ext)
 
         # Upload the archive
         print("Uploading the archive...")
@@ -37,8 +36,7 @@ def do_deploy(archive_path):
         print("Archive uncompressed.")
 
         print("Moving content out of web_static directory...")
-        run("mv {}web_static/* {}".format(remote_release_folder, 
-                                          remote_release_folder))
+        run("mv {}web_static/* {}".format(remote_release_folder, remote_release_folder))
         print("Content moved.")
 
         print("Cleaning up...")
@@ -50,5 +48,5 @@ def do_deploy(archive_path):
 
         return True
     except Exception as e:
-        print("An error occurred: {}".format(e))
+        print(e)
         return False
