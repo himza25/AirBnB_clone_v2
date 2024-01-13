@@ -5,64 +5,69 @@ class web_static_setup {
         ensure => installed,
     }
 
-    # Ensure directories are present and have correct owner and group
-    file { '/data':
-        ensure => directory,
-        owner  => 'ubuntu',
-        group  => 'ubuntu',
-    }
+    # Create required directories
+    file {
+        '/data':
+            ensure => 'directory',
+            owner  => 'ubuntu',
+            group  => 'ubuntu';
 
-    file { '/data/web_static':
-        ensure => directory,
-        owner  => 'ubuntu',
-        group  => 'ubuntu',
-    }
+        '/data/web_static':
+            ensure => 'directory',
+            owner  => 'ubuntu',
+            group  => 'ubuntu';
 
-    file { '/data/web_static/releases':
-        ensure => directory,
-        owner  => 'ubuntu',
-        group  => 'ubuntu',
-    }
+        '/data/web_static/releases':
+            ensure => 'directory',
+            owner  => 'ubuntu',
+            group  => 'ubuntu';
 
-    file { '/data/web_static/shared':
-        ensure => directory,
-        owner  => 'ubuntu',
-        group  => 'ubuntu',
-    }
+        '/data/web_static/shared':
+            ensure => 'directory',
+            owner  => 'ubuntu',
+            group  => 'ubuntu';
 
-    file { '/data/web_static/releases/test':
-        ensure => directory,
-        owner  => 'ubuntu',
-        group  => 'ubuntu',
+        '/data/web_static/releases/test':
+            ensure => 'directory',
+            owner  => 'ubuntu',
+            group  => 'ubuntu';
     }
 
     # Create a fake HTML file
     file { '/data/web_static/releases/test/index.html':
-        ensure  => present,
-        content => '<html>\n  <head>\n  </head>\n  <body>\n    Holberton School\n  </body>\n</html>\n',
+        ensure  => 'present',
+        content => '<html>
+  <head>
+  </head>
+  <body>
+    Holberton School
+  </body>
+</html>',
         owner   => 'ubuntu',
         group   => 'ubuntu',
+        mode    => '0644',
     }
 
     # Create a symbolic link
     file { '/data/web_static/current':
-        ensure => link,
+        ensure => 'link',
         target => '/data/web_static/releases/test',
-        force  => true,
         require => File['/data/web_static/releases/test/index.html'],
+        force => true,
     }
 
     # Update Nginx configuration
-    exec { 'update_nginx_config':
+    exec { 'nginx_config_update':
         command => "sed -i '/server_name _;/a \\\n\\tlocation /hbnb_static/ {\\n\\t\\talias /data/web_static/current/;\\n\\t}\\n' /etc/nginx/sites-available/default",
-        onlyif  => "grep -q 'server_name _;' /etc/nginx/sites-available/default",
-        notify  => Service['nginx'],
+        refreshonly => true,
+        subscribe => Package['nginx'],
     }
 
-    # Ensure the Nginx service is running and enabled
+    # Ensure Nginx is restarted to apply the changes
     service { 'nginx':
-        ensure => running,
-        enable => true,
+        ensure    => 'running',
+        enable    => true,
+        subscribe => Exec['nginx_config_update'],
     }
 }
 
