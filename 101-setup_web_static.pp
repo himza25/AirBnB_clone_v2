@@ -1,74 +1,64 @@
-# 101-setup_web_static.pp
-class web_static_setup {
-    # Ensure Nginx is installed
-    package { 'nginx':
-        ensure => installed,
-    }
+# /path/to/101-setup_web_static.pp
+# Puppet manifest to set up web servers for deployment of web_static
 
-    # Create required directories
-    file {
-        '/data':
-            ensure => 'directory',
-            owner  => 'ubuntu',
-            group  => 'ubuntu';
+# Ensure Nginx is installed
+package { 'nginx':
+  ensure => installed,
+}
 
-        '/data/web_static':
-            ensure => 'directory',
-            owner  => 'ubuntu',
-            group  => 'ubuntu';
+# Create necessary directories
+file { [
+    '/data',
+    '/data/web_static',
+    '/data/web_static/releases',
+    '/data/web_static/shared',
+    '/data/web_static/releases/test',
+  ]:
+  ensure => directory,
+  owner  => 'ubuntu',
+  group  => 'ubuntu',
+}
 
-        '/data/web_static/releases':
-            ensure => 'directory',
-            owner  => 'ubuntu',
-            group  => 'ubuntu';
-
-        '/data/web_static/shared':
-            ensure => 'directory',
-            owner  => 'ubuntu',
-            group  => 'ubuntu';
-
-        '/data/web_static/releases/test':
-            ensure => 'directory',
-            owner  => 'ubuntu',
-            group  => 'ubuntu';
-    }
-
-    # Create a fake HTML file
-    file { '/data/web_static/releases/test/index.html':
-        ensure  => 'present',
-        content => '<html>
+# Create a fake HTML file
+file { '/data/web_static/releases/test/index.html':
+  ensure  => present,
+  content => '<html>
   <head>
   </head>
   <body>
     Holberton School
   </body>
 </html>',
-        owner   => 'ubuntu',
-        group   => 'ubuntu',
-        mode    => '0644',
-    }
-
-    # Create a symbolic link
-    file { '/data/web_static/current':
-        ensure => 'link',
-        target => '/data/web_static/releases/test',
-        require => File['/data/web_static/releases/test/index.html'],
-        force => true,
-    }
-
-    # Update Nginx configuration
-    exec { 'nginx_config_update':
-        command => "sed -i '/server_name _;/a \\\n\\tlocation /hbnb_static/ {\\n\\t\\talias /data/web_static/current/;\\n\\t}\\n' /etc/nginx/sites-available/default",
-        refreshonly => true,
-        subscribe => Package['nginx'],
-    }
-
-    # Ensure Nginx is restarted to apply the changes
-    service { 'nginx':
-        ensure    => 'running',
-        enable    => true,
-        subscribe => Exec['nginx_config_update'],
-    }
+  owner   => 'ubuntu',
+  group   => 'ubuntu',
 }
 
-include web_static_setup
+# Create a symbolic link
+file { '/data/web_static/current':
+  ensure => 'link',
+  target => '/data/web_static/releases/test',
+  owner  => 'ubuntu',
+  group  => 'ubuntu',
+  force  => true,
+}
+
+# Configure Nginx
+exec { 'nginx-config':
+  command => 'ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/',
+  unless  => 'test -L /etc/nginx/sites-enabled/default',
+  notify  => Service['nginx'],
+}
+
+file_line { 'nginx-server-block':
+  path    => '/etc/nginx/sites-available/default',
+  line    => "\tlocation /hbnb_static/ {\n\t\talias /data/web_static/current/;\n\t}\n",
+  match   => '^server_name _;',
+  append_on_no_match => true,
+  notify  => Service['nginx'],
+}
+
+# Ensure Nginx is running and enabled
+service { 'nginx':
+  ensure => running,
+  enable => true,
+}
