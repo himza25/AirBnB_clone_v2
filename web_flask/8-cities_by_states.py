@@ -8,15 +8,16 @@ from flask import Flask, render_template
 app = Flask(__name__)
 
 
-@app.route('/states_list')
+@app.route('/cities_by_states')
 def states_list():
     """Render template with states
     """
-    path = '7-states_list.html'
+    path = '8-cities_by_states.html'
     states = storage.all(State)
+
     # sort State object alphabetically by name
-    sorted_states = sorted(states.values(), key=lambda state: state.name)
-    return render_template(path, sorted_states=sorted_states)
+    # sorted_states = sorted(states.values(), key=lambda state: state.name)
+    return render_template(path, states=states)
 
 
 @app.teardown_appcontext
