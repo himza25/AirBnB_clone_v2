@@ -13,18 +13,20 @@ app = Flask(__name__)
 def states_list():
     """ Display a HTML page with a list of all states. """
     states = storage.all(State).values()
-    return render_template('9-states.html', states=states, state=None)
+    return render_template('9-states.html', states=states, state_id=None)
 
 
 @app.route('/states/<id>', strict_slashes=False)
 def state_cities(id):
     """ Display a HTML page with cities of a specific state. """
-    state = None
     states = storage.all(State)
-    state_key = "State.{}".format(id)
-    if state_key in states:
-        state = states[state_key]
-    return render_template('9-states.html', state=state, states=None)
+    state = None
+    # Check if state with the given id exists
+    for st in states.values():
+        if st.id == id:
+            state = st
+            break
+    return render_template('9-states.html', state=state, state_id=id)
 
 
 @app.teardown_appcontext
