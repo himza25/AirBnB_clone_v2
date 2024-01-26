@@ -1,39 +1,33 @@
 #!/usr/bin/python3
-"""
-This module starts a Flask web application to display states and cities.
-"""
-
+"""run flask server"""
 from flask import Flask, render_template
-from models import storage, State
-
+from models import storage
 app = Flask(__name__)
 
 
-@app.route('/states', strict_slashes=False)
-def states_list():
-    """ Display a HTML page with a list of all states. """
-    states = storage.all(State).values()
-    return render_template('9-states.html', states=states, state_id=None)
+@app.route("/states", strict_slashes=False)
+def states():
+    """states returned"""
+    return render_template('9-states.html\
+', states=storage.all("State"), state=None)
 
 
-@app.route('/states/<id>', strict_slashes=False)
-def state_cities(id):
-    """ Display a HTML page with cities of a specific state. """
-    states = storage.all(State)
-    state = None
-    # Check if state with the given id exists
-    for st in states.values():
-        if st.id == id:
-            state = st
-            break
-    return render_template('9-states.html', state=state, state_id=id)
+@app.route("/states/<id>", strict_slashes=False)
+def id_state(id):
+    """states returned"""
+    states = storage.all("State")
+    # if "State.{}".format(id) not in states:
+    #     return render_template('9-states.html')
+    state = storage.all("State").get("State.{}".format(id))
+    return render_template('9-states.html\
+', state=state, states=None)
 
 
 @app.teardown_appcontext
-def close_session(exception):
-    """ Remove the current SQLAlchemy Session. """
+def reset(error):
+    """reload data"""
     storage.close()
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host='0.0.0.0', port=5000)
