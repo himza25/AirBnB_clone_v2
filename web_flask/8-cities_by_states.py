@@ -1,31 +1,33 @@
 #!/usr/bin/python3
-"""Start web application to display cities by states."""
+"""
+Flask web application that displays cities by states from the storage engine.
+"""
 
-from models import storage
-from models.state import State
 from flask import Flask, render_template
-app = Flask(__name__)
+from models import storage
+from models.state import State  # Importing State if it's not already imported in models
 
+app = Flask(__name__)
 
 @app.route('/cities_by_states', strict_slashes=False)
 def cities_by_states():
     """
-    Render template with states and their cities, sorted alphabetically.
+    Renders a HTML page listing all States and their Cities, sorted alphabetically.
     """
-    states = storage.all(State)
-    # Sort State objects alphabetically by name
-    sorted_states = sorted(states.values(), key=lambda state: state.name)
-    return render_template('8-cities_by_states.html', sorted_states=sorted_states)
-
+    states = storage.all(State).values()
+    cities_dict = {}
+    for state in states:
+        cities_dict[state.name] = sorted(state.cities, key=lambda city: city.name)
+    # Sort states alphabetically by name
+    sorted_states = sorted(states, key=lambda state: state.name)
+    return render_template('8-cities_by_states.html', states=sorted_states, cities=cities_dict)
 
 @app.teardown_appcontext
-def app_teardown(arg=None):
+def close_session(exception):
     """
-    Clean-up session.
+    Closes the SQLAlchemy session after each request.
     """
     storage.close()
 
-
-if __name__ == '__main__':
-    app.url_map.strict_slashes = False
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
