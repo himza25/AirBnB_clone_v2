@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <HTML lang="en">
     <HEAD>
-        <TITLE>HBNB</TITLE>
+        <TITLE>HBNB - Cities by States</TITLE>
     </HEAD>
     <BODY>
         <H1>States</H1>
         <UL>
-            {% for state in states %}
+            {% for state in sorted_states %}
             <LI>{{ state.id }}: <B>{{ state.name }}</B>
                 <UL>
                     {% for city in state.cities %}
