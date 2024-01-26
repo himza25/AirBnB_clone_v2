@@ -20,10 +20,10 @@ def states_list():
 def state_cities(id):
     """ Display a HTML page with cities of a specific state. """
     state = None
-    for st in storage.all(State).values():
-        if st.id == id:
-            state = st
-            break
+    states = storage.all(State)
+    state_key = "State.{}".format(id)
+    if state_key in states:
+        state = states[state_key]
     return render_template('9-states.html', state=state, states=None)
 
 
