@@ -4,7 +4,11 @@
 from models.base_model import BaseModel, Base
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
+import models
 import os
+
+# Import City for FileStorage
+from models.city import City
 
 
 class State(BaseModel, Base):
@@ -19,11 +23,11 @@ class State(BaseModel, Base):
                               cascade="all, delete-orphan"
                               )
     else:
-        name = ""
-
         @property
         def cities(self):
             """FileStorage relationship between State and City."""
-            from models import storage
-            file_cities = storage.all(storage.classes['City']).values()
-            return [city for city in file_cities if city.state_id == self.id]
+            city_list = []
+            for city in models.storage.all(City).values():
+                if city.state_id == self.id:
+                    city_list.append(city)
+            return city_list
