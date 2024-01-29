@@ -4,14 +4,18 @@
     <TITLE>HBNB</TITLE>
 </HEAD>
 <BODY>
+    <H1>States</H1>
     {% if states %}
-        <H1>States</H1>
         <UL>
             {% for state in states|sort(attribute='name') %}
                 <LI>{{ state.id }}: <B>{{ state.name }}</B></LI>
             {% endfor %}
         </UL>
-    {% elif state %}
+    {% else %}
+        <p>No states available.</p>
+    {% endif %}
+
+    {% if state %}
         <H1>State: {{ state.name }}</H1>
         <H3>Cities:</H3>
         <UL>
@@ -19,7 +23,7 @@
                 <LI>{{ city.id }}: <B>{{ city.name }}</B></LI>
             {% endfor %}
         </UL>
-    {% else %}
+    {% elif state is none %}
         <H1>Not found!</H1>
     {% endif %}
 </BODY>
